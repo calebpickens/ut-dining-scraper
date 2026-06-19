@@ -1,31 +1,31 @@
 name: Execute J2 Menu Scraper
 
 on:
-  schedule:
-    # Uses native timezone support: runs at 6:30 AM Central Time every single morning
-    - cron: '30 6 * * *'
-      timezone: 'America/Chicago'
-  workflow_dispatch: # Keeps a manual "Run Workflow" execution button active inside your browser
+    schedule:
+        # Uses native timezone support: runs at 6:30 AM Central Time every single morning
+        - cron: "30 6 * * *"
+          timezone: "America/Chicago"
+    workflow_dispatch: # Keeps a manual "Run Workflow" execution button active inside your browser
 
 jobs:
-  scrape_and_optimize:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
+    scrape_and_optimize:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check out repository code
+              uses: actions/checkout@v4
 
-      - name: Set up Python Environment
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+            - name: Set up Python Environment
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
 
-      - name: Install Project Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+            - name: Install Project Dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install -r requirements.txt
 
-      - name: Run Optimization Script
-        env:
-          # Safely links your secure repository variable into the running container
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: python main.py
+            - name: Run Optimization Script
+              env:
+                  DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+                  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+              run: python main.py
