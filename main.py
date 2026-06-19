@@ -16,46 +16,41 @@ def fetch_daily_menu():
     response = requests.get(MENU_URL, headers=HEADERS, timeout=15)
     soup = BeautifulSoup(response.text, 'html.parser')
     
-    current_meal = None
     menu_data = {'Breakfast': [], 'Lunch': [], 'Dinner': []}
+    current_meal = None
     
-    # Track all links on page
-    links = soup.find_all('a')
-    print(f"[DEBUG] Found {len(links)} total links on page.")
-
-    for link in links:
-        href = link.get('href', '')
-        if 'label.aspx?RecNumAndPort=' in href:
-            # Traversal to find which meal section this link belongs to
-            # FoodPro places meals inside parent containers above the items
-            parent_text = ""
-            parent = link.find_parent('table')
-            if parent:
-                # Look backward for the meal header banner
-                prev = parent.find_previous(['div', 'table'])
-                while prev:
-                    p_text = prev.get_text().strip()
-                    if any(m in p_text for m in ['Breakfast', 'Lunch', 'Dinner']):
-                        parent_text = p_text
-                        break
-                    prev = prev.find_previous(['div', 'table'])
-
-            if 'Breakfast' in parent_text: current_meal = 'Breakfast'
-            elif 'Lunch' in parent_text: current_meal = 'Lunch'
-            elif 'Dinner' in parent_text: current_meal = 'Dinner'
-            else: current_meal = 'Lunch' # Fallback anchor
-
-            item_name = link.get_text().strip()
-            recipe_id = re.search(r'RecNumAndPort=([^&]+)', href).group(1)
+    # We iterate flatly through every single tag in the body in execution order
+    for element in soup.find_all(True):
+        text = element.get_text().strip()
+        
+        # Check if we are passing a major meal delimiter block
+        if text == 'Breakfast':
+            current_meal = 'Breakfast'
+            continue
+        elif text == 'Lunch':
+            current_meal = 'Lunch'
+            continue
+        elif text == 'Dinner':
+            current_meal = 'Dinner'
+            continue
             
-            macro_data = get_item_macros(recipe_id, item_name)
-            if macro_data:
-                menu_data[current_meal].append({
-                    "name": item_name,
-                    "calories": macro_data["calories"],
-                    "protein": macro_data["protein"]
-                })
+        # If we are currently tracking a valid meal segment and hit a recipe hyperlink
+        if current_meal and element.name == 'a':
+            href = element.get('href', '')
+            if 'label.aspx?RecNumAndPort=' in href:
+                item_name = text
+                recipe_id = re.search(r'RecNumAndPort=([^&]+)', href).group(1)
                 
+                # Pull the individual food metrics
+                macro_data = get_item_macros(recipe_id, item_name)
+                if macro_data:
+                    menu_data[current_meal].append({
+                        "name": item_name,
+                        "calories": macro_data["calories"],
+                        "protein": macro_data["protein"]
+                    })
+                    
+    print(f"[DEBUG] Processing complete. Scraped counts: { {k: len(v) for k, v in menu_data.items()} }")
     return menu_data
 
 def get_item_macros(recipe_id, item_name):
