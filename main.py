@@ -1,71 +1,22 @@
-import os
 import requests
-from bs4 import BeautifulSoup
-from google import genai
 
-MENU_URL = "https://hf-foodpro.austin.utexas.edu/foodpro/shortmenu.aspx?sName=University+Housing+and+Dining&locationNum=12&locationName=J2+Dining&naFlag=1"
+URL = "https://hf-foodpro.austin.utexas.edu/foodpro/shortmenu.aspx?sName=University+Housing+and+Dining&locationNum=12&locationName=J2+Dining&naFlag=1"
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5"
 }
 
-def fetch_menu_names():
-    response = requests.get(MENU_URL, headers=HEADERS, timeout=15)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
-    menu_data = {'Lunch': [], 'Dinner': []}
-    current_meal = None
-    
-    for element in soup.find_all(True):
-        text = element.get_text().strip()
-        if text == 'Breakfast': current_meal = 'Breakfast'
-        elif text == 'Lunch': current_meal = 'Lunch'
-        elif text == 'Dinner': current_meal = 'Dinner'
-        
-        if current_meal in ['Lunch', 'Dinner'] and element.name == 'a' and 'label.aspx' in element.get('href', ''):
-            if text and text not in menu_data[current_meal]:
-                menu_data[current_meal].append(text)
-                
-    return menu_data
-
-def generate_recommendations(menu_data, api_key):
-    client = genai.Client(api_key=api_key)
-    
-    prompt = f"""
-    You are a nutrition bot. Here is the available menu for a university dining hall today:
-    
-    LUNCH: {', '.join(menu_data['Lunch'])}
-    DINNER: {', '.join(menu_data['Dinner'])}
-    
-    Select the optimal combination of items for both Lunch and Dinner to maximize protein while keeping the total calories for each meal around 750-800. 
-    Estimate the macros based on standard nutritional profiles for these foods.
-    Format your response directly as a Discord message using markdown. Use bullet points. Keep it concise. Start immediately with the Lunch header.
-    """
-    
-    response = client.models.generate_content(
-        model='gemini-2.5-flash',
-        contents=prompt,
-    )
-    return response.text
-
 if __name__ == "__main__":
-    discord_webhook = os.environ.get("DISCORD_WEBHOOK")
-    gemini_key = os.environ.get("GEMINI_API_KEY")
+    print(f"[TEST] Sending exactly one GET request to UT FoodPro...")
     
-    if not discord_webhook or not gemini_key:
-        print("Error: Missing environment variables.")
-        exit(1)
-        
     try:
-        menu_items = fetch_menu_names()
+        response = requests.get(URL, headers=HEADERS, timeout=15)
+        print(f"\n[RESULT] HTTP Status Code: {response.status_code}")
         
-        if not menu_items['Lunch'] and not menu_items['Dinner']:
-            requests.post(discord_webhook, json={"content": "⚠️ Failed to parse main menu names. Firewall may be blocking the root domain."})
-            exit(1)
-            
-        message_content = generate_recommendations(menu_items, gemini_key)
+        # Print a small snippet of the page to verify it's actual HTML and not a Cloudflare/WAF captcha page
+        print(f"[RESULT] HTML Snippet: {response.text[:250].strip()}")
         
-        requests.post(discord_webhook, json={"content": message_content})
-        
-    except Exception as e:
-        requests.post(discord_webhook, json={"content": f"⚠️ Execution Crash: {str(e)}"})
+    except requests.exceptions.RequestException as e:
+        print(f"\n[FATAL ERROR] Connection dropped: {e}")
