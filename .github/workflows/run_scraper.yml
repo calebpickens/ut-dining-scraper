@@ -3,7 +3,7 @@ name: Execute J2 Menu Scraper
 on:
     schedule:
         # Uses native timezone support: runs at 6:30 AM Central Time every single morning
-        - cron: "30 6 * * *"
+        - cron: "17 6 * * *"
           timezone: "America/Chicago"
     workflow_dispatch: # Keeps a manual "Run Workflow" execution button active inside your browser
 

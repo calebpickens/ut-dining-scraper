@@ -2,6 +2,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from google import genai
+import time
 
 MENU_URL = "https://hf-foodpro.austin.utexas.edu/foodpro/shortmenu.aspx?sName=University+Housing+and+Dining&locationNum=12&locationName=J2+Dining&naFlag=1"
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
@@ -21,26 +22,53 @@ def generate_recommendations(raw_text, api_key):
     {raw_text}
     
     TASK:
-    Select the optimal combination of items for both Lunch and Dinner to maximize protein while keeping the total calories for each meal strictly between 700-800 kcal. 
+    Analyze the menu and construct THREE distinct meal options for Lunch and THREE distinct options for Dinner. Each option must strictly adhere to a caloric ceiling of 700-800 kcal while maximizing protein (aiming for 70g+ if mathematically viable).
     
     CONSTRAINTS:
-    1. Prioritize whole, single-ingredient protein sources (e.g., grilled chicken, plain beef) over mixed casseroles or stews to minimize hidden oil variances.
-    2. Include at least one high-volume vegetable per meal.
-    3. Ensure portion sizes are realistic for a dining hall setting.
+    1. Option 1 (The Utilitarian): Prioritize absolute maximum protein efficiency (e.g., grilled poultry, lean beef).
+    2. Option 2 (The Composite Bowl): Construct a meal mimicking a fast-casual bowl configuration, combining a bed of greens, a dense carbohydrate or grain base, a primary protein, and a vegetable.
+    3. Option 3 (Culinary Diversity): Select a macro-friendly configuration featuring alternative cuisines (e.g., Asian-inspired dishes, Mexican profiles, or homestyle items) that still strictly meets the caloric parameters.
     
     FORMATTING:
-    Respond directly as a Discord message using markdown. Do not use conversational filler. 
+    Respond directly as a Discord message using markdown. Keep it concise.
     Format EXACTLY like this:
+    
     **LUNCH**
+    **Option 1: Maximum Efficiency**
     * [Serving Size]x [Item Name]
     * [Serving Size]x [Item Name]
-    *Estimated Macros: [X] kcal | [X]g P | [X]g C | [X]g F*
+    *Macros: ~[X] kcal | [X]g P | [X]g C | [X]g F*
+    
+    **Option 2: The Composite Bowl**
+    * [Serving Size]x [Item Name]
+    * [Serving Size]x [Item Name]
+    * [Serving Size]x [Item Name]
+    *Macros: ~[X] kcal | [X]g P | [X]g C | [X]g F*
+    
+    **Option 3: Culinary Diversity**
+    * [Serving Size]x [Item Name]
+    * [Serving Size]x [Item Name]
+    *Macros: ~[X] kcal | [X]g P | [X]g C | [X]g F*
+    
+    (Repeat identical structure for DINNER)
     """
-    response = client.models.generate_content(
-        model='gemini-2.5-flash',
-        contents=prompt,
-    )
-    return response.text
+    
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+            )
+            return response.text
+        except Exception as e:
+            if "503" in str(e) or "UNAVAILABLE" in str(e):
+                if attempt < max_retries - 1:
+                    print(f"[DEBUG] API overloaded. Retrying in 15 seconds... (Attempt {attempt + 1}/{max_retries})")
+                    time.sleep(15)
+                    continue
+            # If it's not a 503, or we run out of retries, throw the error to the crash handler
+            raise e
 
 if __name__ == "__main__":
     discord_webhook = os.environ.get("DISCORD_WEBHOOK")
