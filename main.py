@@ -22,12 +22,14 @@ def generate_recommendations(raw_text, api_key):
     {raw_text}
     
     TASK:
-    Analyze the menu and construct THREE distinct meal options for Lunch and THREE distinct options for Dinner. Each option must strictly adhere to a caloric ceiling of 700-800 kcal while maximizing protein (aiming for 70g+ if mathematically viable).
+    Analyze the menu and construct THREE distinct meal options for Lunch and THREE distinct options for Dinner. Each option must strictly adhere to a caloric ceiling of 700-800 kcal while maximizing protein.
     
     CONSTRAINTS:
-    1. Option 1 (The Utilitarian): Prioritize absolute maximum protein efficiency (e.g., grilled poultry, lean beef).
-    2. Option 2 (The Composite Bowl): Construct a meal mimicking a fast-casual bowl configuration, combining a bed of greens, a dense carbohydrate or grain base, a primary protein, and a vegetable.
-    3. Option 3 (Culinary Diversity): Select a macro-friendly configuration featuring alternative cuisines (e.g., Asian-inspired dishes, Mexican profiles, or homestyle items) that still strictly meets the caloric parameters.
+    1. Option 1 (The Utilitarian): Prioritize absolute maximum protein efficiency.
+    2. Option 2 (The Composite Bowl): Construct a meal mimicking a fast-casual bowl configuration (greens, grain base, primary protein, vegetable).
+    3. Option 3 (Culinary Diversity): Select alternative cuisines (e.g., Asian-inspired, Mexican profiles, homestyle).
+    4. Anti-Stacking Protocol: NEVER include two different preparations of the same animal in a single meal (e.g., do not serve Grilled Chicken alongside Diced Chicken).
+    5. Anchor Variety: Ensure Options 1, 2, and 3 use fundamentally different primary protein sources if the menu allows it. Do not use chicken for all three options.
     
     FORMATTING:
     Respond directly as a Discord message using markdown. Keep it concise.
@@ -42,7 +44,6 @@ def generate_recommendations(raw_text, api_key):
     **Option 2: The Composite Bowl**
     * [Serving Size]x [Item Name]
     * [Serving Size]x [Item Name]
-    * [Serving Size]x [Item Name]
     *Macros: ~[X] kcal | [X]g P | [X]g C | [X]g F*
     
     **Option 3: Culinary Diversity**
@@ -50,7 +51,13 @@ def generate_recommendations(raw_text, api_key):
     * [Serving Size]x [Item Name]
     *Macros: ~[X] kcal | [X]g P | [X]g C | [X]g F*
     
-    (Repeat identical structure for DINNER)
+    **DINNER**
+    **Option 1: Maximum Efficiency**
+    * [Serving Size]x [Item Name]
+    * [Serving Size]x [Item Name]
+    *Macros: ~[X] kcal | [X]g P | [X]g C | [X]g F*
+    
+    [Continue matching structure for Dinner...]
     """
     
     max_retries = 3
@@ -86,8 +93,23 @@ if __name__ == "__main__":
             exit(1)
             
         message_content = generate_recommendations(raw_menu, gemini_key)
-        requests.post(discord_webhook, json={"content": message_content})
         
+        # Payload Bifurcation to bypass Discord's 2000-character limit
+        if "**DINNER**" in message_content:
+            parts = message_content.split("**DINNER**")
+            lunch_payload = parts[0].strip()
+            dinner_payload = "**DINNER**\n" + parts[1].strip()
+            
+            # Dispatch Lunch
+            requests.post(discord_webhook, json={"content": lunch_payload})
+            import time
+            time.sleep(2) # Brief pause to prevent rate-limiting from Discord
+            # Dispatch Dinner
+            requests.post(discord_webhook, json={"content": dinner_payload})
+        else:
+            # Fallback if the AI messes up the formatting
+            requests.post(discord_webhook, json={"content": message_content[:2000]})
+            
     except Exception as e:
         if discord_webhook:
             requests.post(discord_webhook, json={"content": f"⚠️ Execution Crash: {str(e)}"})
