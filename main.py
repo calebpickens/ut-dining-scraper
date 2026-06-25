@@ -29,11 +29,12 @@ def generate_recommendations(raw_text, api_key):
     
     CONSTRAINTS:
     1. Option 1 (The Utilitarian): Prioritize absolute maximum protein efficiency (e.g., grilled poultry, lean beef).
-    2. Option 2 (The Composite Bowl): Construct a meal mimicking a fast-casual bowl. You MUST include a traditional staple carbohydrate base (e.g., white/brown rice, pasta, quinoa) alongside greens, a primary protein, and a vegetable.
-    3. Option 3 (Culinary Diversity): Select alternative cuisines (e.g., Asian-inspired dishes utilizing rice/noodles, Mexican profiles, homestyle).
+    2. Option 2 (The Composite Bowl): Construct a meal mimicking a fast-casual bowl. You MUST include a traditional GRAIN base (e.g., white/brown rice, pasta, quinoa) alongside greens, a primary protein, and a vegetable. Do not use potatoes for this option.
+    3. Option 3 (Culinary Diversity): Select alternative cuisines (e.g., Asian-inspired dishes, Mexican profiles, homestyle).
     4. Anti-Stacking Protocol: NEVER include two different preparations of the same animal in a single meal.
     5. Anchor Variety: Ensure Options 1, 2, and 3 use fundamentally different primary protein sources if the menu allows it.
-    6. Carbohydrate Sourcing: Do not rely exclusively on fibrous vegetables or legumes for carbohydrates. You must actively incorporate traditional staple carbs (rice, pasta, bread, standard potatoes) into the meal structures to reach the 1000 kcal target.
+    6. Dining Hall Realism (CRITICAL): Do not suggest ordering more than 2 servings of a grilled/station-served protein (e.g., max 2 burger patties, max 2 chicken breasts). Use calorically dense carbohydrates or healthy fats to reach the 1000 kcal target instead of stacking endless meat.
+    7. Proportional Ratios: Ensure carbohydrate-to-meat ratios make physical sense (e.g., if prescribing tacos/fajitas, provide an adequate number of tortillas for the volume of meat).
     
     FORMATTING:
     Respond directly as a Discord message using markdown. 
@@ -47,23 +48,7 @@ def generate_recommendations(raw_text, api_key):
     * [Serving Size]x [Item Name]
     *Macros: ~[X] kcal | [X]g P | [X]g C | [X]g F*
     
-    **Option 2: The Composite Bowl**
-    * [Serving Size]x [Item Name]
-    * [Serving Size]x [Item Name]
-    *Macros: ~[X] kcal | [X]g P | [X]g C | [X]g F*
-    
-    **Option 3: Culinary Diversity**
-    * [Serving Size]x [Item Name]
-    * [Serving Size]x [Item Name]
-    *Macros: ~[X] kcal | [X]g P | [X]g C | [X]g F*
-    
-    **DINNER**
-    **Option 1: Maximum Efficiency**
-    * [Serving Size]x [Item Name]
-    * [Serving Size]x [Item Name]
-    *Macros: ~[X] kcal | [X]g P | [X]g C | [X]g F*
-    
-    [Continue matching structure for Dinner...]
+    [Continue matching structure...]
     """
     
     max_retries = 3
