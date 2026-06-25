@@ -22,17 +22,23 @@ def generate_recommendations(raw_text, api_key):
     {raw_text}
     
     TASK:
-    Analyze the menu and construct THREE distinct meal options for Lunch and THREE distinct options for Dinner. Each option must strictly adhere to a caloric ceiling of 700-800 kcal while maximizing protein.
+    Analyze the menu and construct THREE distinct meal options for Lunch and THREE distinct options for Dinner. Each option must strictly adhere to a caloric target of 950-1050 kcal while maximizing protein (aiming for 85-95g+ per meal).
+    
+    HARD EXCLUSIONS:
+    Do NOT include, suggest, or calculate any of the following items under any circumstances: cheese (of any kind), sweet potatoes, avocado, guacamole, or tofu.
     
     CONSTRAINTS:
-    1. Option 1 (The Utilitarian): Prioritize absolute maximum protein efficiency.
-    2. Option 2 (The Composite Bowl): Construct a meal mimicking a fast-casual bowl configuration (greens, grain base, primary protein, vegetable).
-    3. Option 3 (Culinary Diversity): Select alternative cuisines (e.g., Asian-inspired, Mexican profiles, homestyle).
-    4. Anti-Stacking Protocol: NEVER include two different preparations of the same animal in a single meal (e.g., do not serve Grilled Chicken alongside Diced Chicken).
-    5. Anchor Variety: Ensure Options 1, 2, and 3 use fundamentally different primary protein sources if the menu allows it. Do not use chicken for all three options.
+    1. Option 1 (The Utilitarian): Prioritize absolute maximum protein efficiency (e.g., grilled poultry, lean beef).
+    2. Option 2 (The Composite Bowl): Construct a meal mimicking a fast-casual bowl. You MUST include a traditional staple carbohydrate base (e.g., white/brown rice, pasta, quinoa) alongside greens, a primary protein, and a vegetable.
+    3. Option 3 (Culinary Diversity): Select alternative cuisines (e.g., Asian-inspired dishes utilizing rice/noodles, Mexican profiles, homestyle).
+    4. Anti-Stacking Protocol: NEVER include two different preparations of the same animal in a single meal.
+    5. Anchor Variety: Ensure Options 1, 2, and 3 use fundamentally different primary protein sources if the menu allows it.
+    6. Carbohydrate Sourcing: Do not rely exclusively on fibrous vegetables or legumes for carbohydrates. You must actively incorporate traditional staple carbs (rice, pasta, bread, standard potatoes) into the meal structures to reach the 1000 kcal target.
     
     FORMATTING:
-    Respond directly as a Discord message using markdown. Keep it concise.
+    Respond directly as a Discord message using markdown. 
+    CRITICAL: Output ONLY the meal formatting. Do NOT include any introductory greetings, conversational filler, or closing remarks. Start immediately with the **LUNCH** header.
+    
     Format EXACTLY like this:
     
     **LUNCH**
